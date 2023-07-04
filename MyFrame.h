@@ -5,6 +5,7 @@
 #include "File.h"
 class Datei;
 
+typedef std::pair<wxString, wxString> INFOPAIR;
 
 class MyFrame : public wxFrame {
 
@@ -19,7 +20,7 @@ class MyFrame : public wxFrame {
 	void listclickhandler(wxCommandEvent&);
 	
 	//Nimmt FILESET und eine Zeilennummer und gibt Pfad und Größe der Datei zurück
-	std::pair<wxString, wxString> getInfo(Datei**, unsigned int);
+	INFOPAIR getInfo(Datei**, unsigned int);
 
 public:
 	

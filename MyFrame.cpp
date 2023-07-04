@@ -28,7 +28,7 @@ MyFrame::MyFrame() : wxFrame(nullptr,10000,"DirectoryCompare",wxPoint(10,10),wxS
 	banner = new wxBannerWindow(this, wxBottom);
 	banner->SetBitmap(logo);
 
-	//listboxen
+	//listboxes
 	lbox = new wxListBox(this, 10002, wxDefaultPosition, wxSize(490, 560), NULL, wxLB_NEEDED_SB);
 	rbox = new wxListBox(this, 10003, wxDefaultPosition, wxSize(490, 560), NULL, wxLB_NEEDED_SB);
 
@@ -59,7 +59,7 @@ void MyFrame::closeapp(T& closeevt){
 	Destroy();
 }
 
-std::pair<wxString, wxString> MyFrame::getInfo(Datei** difp, unsigned int row){
+INFOPAIR MyFrame::getInfo(Datei** difp, unsigned int row){
 
 	return std::make_pair(wxString(difp[row]->getpath()), wxString(std::to_string(difp[row]->getsize())));
 
@@ -69,7 +69,7 @@ template <char site>
 void MyFrame::listclickhandler(wxCommandEvent& cevt) {
 
 	unsigned int rownumber = cevt.GetSelection();
-	if (rownumber <= 1) return; //Event abbrechen wenn Zeile ohne Dateiname geklickt wurde
+	if (rownumber <= 1) return; //Abort Event if a row in the offset to the data was clicked 
 	std::pair<wxString, wxString> infopair;
 	if(site == 'l'){ infopair = MyFrame::getInfo(this->dif2, rownumber - 2); }
 	else if (site == 'r') { infopair = MyFrame::getInfo(this->dif1, rownumber - 2); }
