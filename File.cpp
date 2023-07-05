@@ -1,6 +1,5 @@
 #include "File.h"
 
-//Konstruktor
 Datei::Datei(const string name, const string path, const uint64_t size){
 
 	this->name = name;

@@ -10,7 +10,7 @@ wxEND_EVENT_TABLE()
 
 MyFrame::MyFrame() : wxFrame(nullptr,10000,"DirectoryCompare",wxPoint(10,10),wxSize(1000,900)) {
 
-	//disable resize borders
+	//Disable resize borders / disable maximize button
 	SetWindowStyle(wxDEFAULT_FRAME_STYLE & ~wxRESIZE_BORDER & ~wxMAXIMIZE_BOX);
 	
 	//Background
@@ -20,23 +20,23 @@ MyFrame::MyFrame() : wxFrame(nullptr,10000,"DirectoryCompare",wxPoint(10,10),wxS
 	this->SetIcon(icon);
 	tbicon = new wxTaskBarIcon();
 
-	//sizers
+	//Sizers
 	sizer = new wxBoxSizer(wxHORIZONTAL);
 	topsizer = new wxBoxSizer(wxVERTICAL);
 
-	//logo
+	//Logo
 	banner = new wxBannerWindow(this, wxBottom);
 	banner->SetBitmap(logo);
 
-	//listboxes
+	//Listboxes
 	lbox = new wxListBox(this, 10002, wxDefaultPosition, wxSize(490, 560), NULL, wxLB_NEEDED_SB);
 	rbox = new wxListBox(this, 10003, wxDefaultPosition, wxSize(490, 560), NULL, wxLB_NEEDED_SB);
 
-	//button
+	//Button
 	button1 = new wxButton(this,10001, "END",wxPoint(10,10), wxSize(120, 25));
 	button1->SetBackgroundColour(*wxWHITE);
 
-	//layout the frame
+	//Layout the frame
 	sizer->Add(lbox, wxSizerFlags().Expand());
 	sizer->AddSpacer(1);
 	sizer->Add(rbox, wxSizerFlags().Expand());
@@ -62,17 +62,16 @@ void MyFrame::closeapp(T& closeevt){
 INFOPAIR MyFrame::getInfo(Datei** difp, unsigned int row){
 
 	return std::make_pair(wxString(difp[row]->getpath()), wxString(std::to_string(difp[row]->getsize())));
-
 }
 
 template <char site> 
 void MyFrame::listclickhandler(wxCommandEvent& cevt) {
 
 	unsigned int rownumber = cevt.GetSelection();
-	if (rownumber <= 1) return; //Abort Event if a row in the offset to the data was clicked 
+	if (!(rownumber >= LB_FIRST_DATA )) return; //Abort the Event if a row in the offset to the data was clicked 
 	std::pair<wxString, wxString> infopair;
-	if(site == 'l'){ infopair = MyFrame::getInfo(this->dif2, rownumber - 2); }
-	else if (site == 'r') { infopair = MyFrame::getInfo(this->dif1, rownumber - 2); }
+	if(site == 'l'){ infopair = MyFrame::getInfo(this->dif2, rownumber - LB_FIRST_DATA); }
+	else if (site == 'r') { infopair = MyFrame::getInfo(this->dif1, rownumber - LB_FIRST_DATA); }
 	const wxString info = infopair.first +"\n"+ infopair.second + " Bytes";
 	wxToolTip* tip = new wxToolTip(info);
 	if (site == 'l') {this->lbox->SetToolTip(tip);}
@@ -82,4 +81,5 @@ void MyFrame::listclickhandler(wxCommandEvent& cevt) {
 	tip->SetAutoPop(3000);
 	tip->Enable(true);
 	cevt.Skip();
+	return;
 }

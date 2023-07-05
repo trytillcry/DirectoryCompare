@@ -1,7 +1,4 @@
 #pragma once
-#ifdef _MSC_VER
-#define _CRT_SECURE_NO_WARNINGS
-#endif
 
 #include <algorithm>
 #include <fstream>
@@ -27,9 +24,9 @@ using std::endl;
 const string batchpath = "filenamelist.bat"; 
 unsigned int duplicates1 = 0, duplicates2 = 0;
 
-//Parser fuer string zu Datei
-///<param name='str'>: String Referenz der Form Pfad|name|Groeﬂe in Bytes</param>
-///<param name='isdup'>: Flag Parameter der festlegt dass das Element als Duplikat eingefuegt werden soll</param>
+//Parser to parse the given string to a Datei object. If isdup true it prefix the name with an '?'
+///<param name='str'>: String&  PATH|NAME|BYTES</param>
+///<param name='isdup'>: duplicate flag</param>
 Datei strtofile(string& str, bool isdup = 0){
 
 	const char* p = str.data();
@@ -65,16 +62,16 @@ Datei strtofile(string& str, bool isdup = 0){
 	return Datei(name, path, size);
 }
 
-//Befuellt das Set mit den Dateinamen und kennzeichnet Duplikate durch Anhaengen von Fragezeichen
-//und gibt Anzahl an eingefuegten Elementen an
-///<param name='set'>: Pointer zu Zielmenge</param>
-///<param name='in'>: zu parsender Inputstring</param>
-///<param name='dup'>: Anzahl der Duplikate</param>
+//Fills the Set with the filenames and returns the number of insertions
+///<param name='set'>: pointer to set</param>
+///<param name='in'>: input string to parse</param>
+///<param name='dup'>: number of duplicates</param>
 unsigned int fillset(FILESET* set, const string& in, unsigned int& dup) {
 
 	int linecounter = 0;
-	std::stringstream strom = std::stringstream(in, std::ios_base::in);
 	string tmp = "";
+
+	std::stringstream strom = std::stringstream(in, std::ios_base::in);
 
 	while (1) {
 
@@ -89,13 +86,13 @@ unsigned int fillset(FILESET* set, const string& in, unsigned int& dup) {
 		
 		++linecounter;
 	}
-
-		return linecounter;
+	
+	return linecounter;
 }
 
-//Zaehlt alle vorkommen von c in Zeichenfolge str
-///<param name='str'>: Anfang der Zeichenfolgy</param>
-///<param name='c'>: Zu suchendes Zeichen</param>
+//Counts the occurrences of a given character in a string
+///<param name='str'>: Pointer to the input string</param>
+///<param name='c'>: char to count</param>
 unsigned int counteach(const char* str, const char c) {
 
 	unsigned int returncount = 0;
@@ -110,33 +107,10 @@ unsigned int counteach(const char* str, const char c) {
 	return returncount;
 }
 
-//Ueberprueft ob die angegebene Pfadangabe in Anfuehrungszeichen steht und entfernt diese gegebenfalls
-///<param name='pathptr'>: Adresse des Pfadstrings</param>
-void checkpathstyle(wchar_t* pathptr) {
-	int pos = 0;
-	if (pathptr[0] == L'\"') {
-
-		while (pos < MAX_PATH && pathptr[pos + 2] != L'\0') {
-			pathptr[pos] = pathptr[pos + 1];
-			++pos;
-		}
-		if (pathptr[pos + 1] != L'\"') {
-			cout << "Something went wrong with path style in function checkpathstyle()" << endl;
-			system("pause");
-			exit(EXIT_FAILURE);
-		}
-		else {
-			pathptr[pos] = L'\0';
-			return;
-		}
-	}
-	else return;
-}
-
-//Ermittelt welche Elemente aus pl1 in pl2 nicht vorhanden sind
-///<param name='tocheck'>: Menge der zu kontrollierenden Datein</param>
-///<param name='cntrl'>: Menge der Dateien die auf Gleichheit ueberprueft werden</param>
-///<param name='difarr'>: Array fuer Adressen der Fehlenden</param>
+//Determines which elements of pl1 are not in pl2
+///<param name='tocheck'>: Set of Files to check</param>
+///<param name='cntrl'>: Set of Files to check against pl1</param>
+///<param name='difarr'>: Array for adresses of the Missing Files</param>
 unsigned int listdiff(const FILESET& tocheck,const FILESET& cntrl, Datei** difarr) {
 
 	FILESET::iterator dat = tocheck.begin();
@@ -154,6 +128,7 @@ unsigned int listdiff(const FILESET& tocheck,const FILESET& cntrl, Datei** difar
 	return destpos;
 }
 
+//Callback Function used in choosefolder()
 static int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
 	if (uMsg == BFFM_INITIALIZED) {
@@ -163,6 +138,7 @@ static int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LP
 	return 0;
 }
 
+//Opens a Window with a Dir Tree, waits for the User to select a directory, returns the absolute path
 std::wstring choosefolder(int (CALLBACK* callback)(HWND, UINT, LPARAM, LPARAM), LPWSTR title = NULL) {
 
 	wchar_t  folderpath[MAX_PATH];
@@ -179,13 +155,12 @@ std::wstring choosefolder(int (CALLBACK* callback)(HWND, UINT, LPARAM, LPARAM), 
 	return std::wstring(folderpath);
 }
 
-//Oeffnet Child Process + Pipe und fuehrt aus. Speichert return in String
-///<param name='batch'>: Pfad zu Batchfile welches ausgefuehrt werden soll</param>
-string exec(const char const * batch) {
+//Opens Child Prompt + Pipe and executes the passed command , returns the output as string
+string exec(const char * const command) {
 
 	char buffer[128];
 	string result;
-	std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(batch, "r"), _pclose);
+	std::unique_ptr<FILE, decltype(&_pclose)> pipe(_popen(command, "r"), _pclose);
 
 	if (!pipe) 	throw std::runtime_error("popen() failed!");
 

@@ -19,8 +19,11 @@ class MyFrame : public wxFrame {
 	template <char side>
 	void listclickhandler(wxCommandEvent&);
 	
-	//Nimmt FILESET und eine Zeilennummer und gibt Pfad und Größe der Datei zurück
+	//Takes a FILESET and a position and returns path and size of the File
 	INFOPAIR getInfo(Datei**, unsigned int);
+
+	//Listbox Position where the data begin (starts at 0)
+	const unsigned char LB_FIRST_DATA = 2;
 
 public:
 	
@@ -28,7 +31,7 @@ public:
 	Datei** dif1 = nullptr;
 	Datei** dif2 = nullptr;
 
-	//sizers
+	//Sizers
 	wxBoxSizer* sizer = nullptr;
 	wxBoxSizer* topsizer = nullptr;
 
@@ -36,18 +39,18 @@ public:
 	wxListBox* lbox = nullptr;
 	wxListBox* rbox = nullptr;
 	
-	//Informationen für Taskleisten- und Fenstericon
+	//Information needed to load the TTC Icon 
 	const wxString bmpname = "ttcicon.ico";
 	const wxIcon icon = wxIcon(bmpname,wxBITMAP_TYPE_ICO);
 	wxTaskBarIcon* tbicon = nullptr;
 
-	//Banner (unterer Fensterabschnitt)
+	//Information needed to load the TTC Logo for the banner 
 	const wxString imgname = "ttclogo.bmp";
 	const wxBitmap img = wxBitmap(imgname,wxBITMAP_TYPE_ANY);
 	const wxBitmapBundle logo = wxBitmapBundle(img);
 	wxBannerWindow* banner = nullptr;
 
-	//Button fuer Programmende
+	//Button to end the prog
 	wxButton* button1 = nullptr;
 
 	//public constructor
