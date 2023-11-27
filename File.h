@@ -13,7 +13,7 @@ class Datei {
 		path,
 		name;
 
-	//constructor
+	//constructor (filename, absolute path, bytes)
 	Datei(string,string,uint64_t);
 
 public:

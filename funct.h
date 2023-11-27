@@ -1,8 +1,7 @@
 #pragma once
-
+#include "File.h"
 #include <algorithm>
 #include <fstream>
-#include "File.h"
 #include <fcntl.h>
 #include <memory>
 #include <iostream>
@@ -128,6 +127,12 @@ unsigned int listdiff(const FILESET& tocheck,const FILESET& cntrl, Datei** difar
 	return destpos;
 }
 
+void listdiffwrap(const FILESET& tocheck, const FILESET& cntrl, Datei** difarr, unsigned int* ndifsptr) {
+
+	*ndifsptr = listdiff(tocheck, cntrl, difarr);
+	
+}
+
 //Callback Function used in choosefolder()
 static int CALLBACK BrowseFolderCallback(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
@@ -167,4 +172,32 @@ string exec(const char * const command) {
 	while (fgets((char*)&buffer, sizeof(buffer) / sizeof(char), pipe.get()) != nullptr) result += (char*)&buffer;
 
 	return result;
+}
+
+//Reads all filenames and the number of files, stores these information in a Pair pointed by pairptr
+void readcontent(const std::wstring folderpath, std::pair<unsigned int, string>* pairptr) {
+
+	//Array for converted folderpaths
+	char path[MAX_PATH];
+
+	//Conversion of the folder names wstring -> cstring 
+	#ifdef _MSC_VER
+	#define _CRT_SECURE_NO_WARNINGS
+	#endif
+	wcstombs(path, folderpath.data(), MAX_PATH);
+	#undef _CRT_SECURE_NO_WARNINGS
+	
+	//Building the command for exec() the folder iteration
+	const string command = batchpath + "  \"" + path + "\"";
+
+	//Child Batch retrieves Filenames and writes it in a String
+	const string cmdout = exec(command.data());
+
+	//Determines the number of files based on lineseperator count
+	const unsigned int nrows = counteach(cmdout.data(), '\n');
+
+	pairptr->first = nrows;
+	pairptr->second = cmdout;
+
+	return;
 }

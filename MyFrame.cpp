@@ -64,18 +64,18 @@ INFOPAIR MyFrame::getInfo(Datei** difp, unsigned int row){
 	return std::make_pair(wxString(difp[row]->getpath()), wxString(std::to_string(difp[row]->getsize())));
 }
 
-template <char site> 
+template <char side> 
 void MyFrame::listclickhandler(wxCommandEvent& cevt) {
 
 	unsigned int rownumber = cevt.GetSelection();
 	if (!(rownumber >= LB_FIRST_DATA )) return; //Abort the Event if a row in the offset to the data was clicked 
 	std::pair<wxString, wxString> infopair;
-	if(site == 'l'){ infopair = MyFrame::getInfo(this->dif2, rownumber - LB_FIRST_DATA); }
-	else if (site == 'r') { infopair = MyFrame::getInfo(this->dif1, rownumber - LB_FIRST_DATA); }
+	if(side == 'l'){ infopair = MyFrame::getInfo(this->dif2, rownumber - LB_FIRST_DATA); }
+	else if (side == 'r') { infopair = MyFrame::getInfo(this->dif1, rownumber - LB_FIRST_DATA); }
 	const wxString info = infopair.first +"\n"+ infopair.second + " Bytes";
 	wxToolTip* tip = new wxToolTip(info);
-	if (site == 'l') {this->lbox->SetToolTip(tip);}
-	else if (site == 'r') { this->rbox->SetToolTip(tip);}
+	if (side == 'l') {this->lbox->SetToolTip(tip);}
+	else if (side == 'r') { this->rbox->SetToolTip(tip);}
 	wxPoint mousePos = wxGetMousePosition();
 	tip->SetDelay(100);
 	tip->SetAutoPop(3000);

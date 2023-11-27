@@ -1,5 +1,6 @@
 #pragma once
 #include "MyFrame.h"
+#include <thread>
 
 class CMain : public wxApp {
 

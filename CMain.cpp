@@ -13,52 +13,45 @@ CMain::~CMain()
 
 bool CMain::OnInit()
 {
-	//User selects Folders
-	std::wstring folder1 = choosefolder(&BrowseFolderCallback);
-	std::wstring folder2 = choosefolder(&BrowseFolderCallback);
-	
-	//Arrays for converted folderpaths
-	char s1[MAX_PATH], s2[MAX_PATH];
-	
-	//Conversion of the folder names wstring -> cstring 
-	#ifdef _MSC_VER
-	#define _CRT_SECURE_NO_WARNINGS
-	#endif
-	wcstombs(s1, folder1.data(), MAX_PATH);
-	wcstombs(s2, folder2.data(), MAX_PATH);
-	#undef _CRT_SECURE_NO_WARNINGS
+	//Pairs for Folder <number of files,filenames>
+	std::pair<unsigned int, string>* p1 = new std::pair<unsigned int, string>;
+	std::pair<unsigned int, string>* p2 = new std::pair<unsigned int, string>;
 
-	//Building the command for exec() the folder iteration
-	const string command1 = batchpath + "  \"" + s1 + "\"";
-	const string command2 = batchpath + "  \"" + s2 + "\"";
+	//User selects first Folder
+	std::wstring folder = choosefolder(&BrowseFolderCallback);
+	//Analyse first folder in a seperate thread
+	std::thread workerthread = std::thread(readcontent, folder, p1);
 
-	//Child Batch retrieves Filenames and writes it in a String
-	const string cmdout1 = exec(command1.data());
-	const string cmdout2 = exec(command2.data());
+	//User selects second Folder
+	folder = choosefolder(&BrowseFolderCallback);
+	//Analyse second Folder in the main thread and wait for the end of thread thr1
+	readcontent(folder, p2);
+	workerthread.join();
 	
 	//Determines the maximum number of files based on lineseperator count
-	const unsigned int nrows1 = counteach(cmdout1.data(), '\n');
-	const unsigned int nrows2 = counteach(cmdout2.data(), '\n');
-	const unsigned int max_rows = std::max<const unsigned int>(nrows1, nrows2);
+	const unsigned int max_rows = std::max<const unsigned int>(p1->first, p2->first);
 
 	//Heap alloc for Filelists 
 	list1 = new FILESET;
 	list2 = new FILESET;
 
 	//Fills the Sets and check the number of insertions against the nrow constant
-	if(nrows1 != fillset(list1, cmdout1, duplicates1)) throw std::runtime_error("nrows1 is not aquivalent filln");
-	if(nrows2 != fillset(list2, cmdout2, duplicates2)) throw std::runtime_error("nrows2 is not aquivalent filln");
+	if(p1->first != fillset(list1, p1->second, duplicates1)) throw std::runtime_error("nrows1 is not aquivalent filln");
+	if(p2->first != fillset(list2, p2->second, duplicates2)) throw std::runtime_error("nrows2 is not aquivalent filln");
 
 	//Heap Alloc for Pointers to the Differences (nullpointer for iteration)
 	dif1 = new Datei* [max_rows+1];
 	dif2 = new Datei* [max_rows+1];
 
-	//Determine the Differrences of the lists , Fills Pointers  in the intended arrays
-	unsigned int ndif1 = (listdiff(*list1, *list2, dif1));
-	unsigned int ndif2 = (listdiff(*list2, *list1, dif2));
-	
-	/*				  ----------------------Build GUI----------------------				  */
+	//Number of Differences in Lists
+	unsigned int ndif1, ndif2;
 
+	//Determine the Differrences of the lists , Fills Pointers  in the intended arrays (multithreaded)
+	workerthread = std::thread(listdiffwrap, std::ref(*list1), std::ref(*list2), dif1, &ndif1);
+	ndif2 = listdiff(*list2, *list1, dif2);
+	workerthread.join();
+		
+	/*				  ----------------------Build GUI----------------------				  */
 	window_main = new MyFrame();
 
 	//Copies Pointers to the diffarrays for passing them to the window_object
@@ -66,16 +59,18 @@ bool CMain::OnInit()
 	window_main->dif2 = this->dif2;
 	
 	//Fills Listboxes (Infoheader | Blank Line | Data)
-	window_main->lbox->Append("From "+ std::to_string(nrows2)+" Files ( "+ std::to_string(duplicates2) + " Duplicates ). " +"These " + std::to_string(ndif2) + " Files are missed:");
+	window_main->lbox->Append("From "+ std::to_string(p2->first)+" Files ( "+ std::to_string(duplicates2) + " Duplicates ). " +"These " + std::to_string(ndif2) + " Files are missed:");
 	window_main->lbox->Append("");
 	for (unsigned int i = 0; dif2[i] != nullptr; i++) window_main->lbox->Append(dif2[i]->getname());
 	
-	window_main->rbox->Append("From "+ std::to_string(nrows1)+" Files ( "+ std::to_string(duplicates1) + " Duplicates ). " +"These " + std::to_string(ndif1) + " Files are missed:");
+	window_main->rbox->Append("From "+ std::to_string(p1->first)+" Files ( "+ std::to_string(duplicates1) + " Duplicates ). " +"These " + std::to_string(ndif1) + " Files are missed:");
 	window_main->rbox->Append("");
 	for (unsigned int i = 0; dif1[i] != nullptr; i++) window_main->rbox->Append(dif1[i]->getname());
 	
 	
 	window_main->Show();
 	
+	delete p1, p2;
+
 	return true;
 }
